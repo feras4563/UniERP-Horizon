@@ -142,119 +142,267 @@
           <button class="modal-close" @click="closeModal">&times;</button>
         </div>
         <div class="modal-body">
+          <!-- Step Indicators -->
+          <div class="step-indicator">
+            <div class="step" :class="{ active: currentStep === 1, completed: currentStep > 1 }">
+              <div class="step-number">1</div>
+              <div class="step-title">المعلومات الشخصية</div>
+            </div>
+            <div class="step" :class="{ active: currentStep === 2, completed: currentStep > 2 }">
+              <div class="step-number">2</div>
+              <div class="step-title">الراتب والساعات</div>
+            </div>
+            <div class="step" :class="{ active: currentStep === 3, completed: currentStep > 3 }">
+              <div class="step-number">3</div>
+              <div class="step-title">الجدول الأسبوعي</div>
+            </div>
+          </div>
+
           <form @submit.prevent="submitTeacher">
-            <div class="form-row">
-              <div class="form-group">
-                <label>الاسم الكامل *</label>
-                <input 
-                  type="text" 
-                  v-model="teacherForm.name" 
-                  class="form-control" 
-                  required
-                >
+            <!-- Step 1: Personal Information -->
+            <div v-show="currentStep === 1" class="form-step">
+              <h3 class="step-heading">المعلومات الشخصية</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>الاسم الكامل *</label>
+                  <input 
+                    type="text" 
+                    v-model="teacherForm.name" 
+                    class="form-control" 
+                    required
+                    placeholder="الاسم الكامل"
+                  >
+                </div>
+                <div class="form-group">
+                  <label>الاسم بالإنجليزية</label>
+                  <input 
+                    type="text" 
+                    v-model="teacherForm.name_en" 
+                    class="form-control"
+                    placeholder="Full Name in English"
+                  >
+                </div>
               </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>التخصص *</label>
+                  <select v-model="teacherForm.department_id" class="form-control" required>
+                    <option value="">اختر التخصص</option>
+                    <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                      {{ dept.name }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>المؤهل العلمي *</label>
+                  <select v-model="teacherForm.education_level" class="form-control" required>
+                    <option value="">اختر المؤهل العلمي</option>
+                    <option value="دكتوراه">دكتوراه (PhD)</option>
+                    <option value="ماجستير">ماجستير (Masters)</option>
+                    <option value="بكالوريوس">بكالوريوس (Bachelor)</option>
+                    <option value="دبلوم عالي">دبلوم عالي</option>
+                    <option value="دبلوم">دبلوم</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>الرتبة العلمية *</label>
+                  <select v-model="teacherForm.qualification" class="form-control" required>
+                    <option value="">اختر الرتبة</option>
+                    <option value="أستاذ">أستاذ</option>
+                    <option value="أستاذ مشارك">أستاذ مشارك</option>
+                    <option value="أستاذ مساعد">أستاذ مساعد</option>
+                    <option value="محاضر">محاضر</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>سنوات الخبرة *</label>
+                  <input 
+                    type="number" 
+                    v-model="teacherForm.years_experience" 
+                    class="form-control" 
+                    min="0" 
+                    max="50"
+                    required
+                    placeholder="عدد سنوات الخبرة"
+                  >
+                </div>
+              </div>
+
               <div class="form-group">
-                <label>الاسم بالإنجليزية</label>
-                <input 
-                  type="text" 
-                  v-model="teacherForm.name_en" 
-                  class="form-control"
-                >
+                <label>التخصصات الدقيقة *</label>
+                <div class="specializations-container">
+                  <div class="selected-specializations" v-if="teacherForm.specializations.length > 0">
+                    <div class="specialization-tag" v-for="(spec, index) in teacherForm.specializations" :key="index">
+                      {{ spec }}
+                      <button type="button" class="remove-spec" @click="removeSpecialization(index)">&times;</button>
+                    </div>
+                  </div>
+                  <div class="add-specialization">
+                    <select v-model="selectedSpecialization" class="form-control" @change="addSpecialization">
+                      <option value="">اختر تخصص دقيق لإضافته</option>
+                      <option v-for="subject in availableSubjects" :key="subject.id" :value="subject.name">
+                        {{ subject.name }} ({{ subject.code }})
+                      </option>
+                    </select>
+                  </div>
+                  <small class="form-text">يمكن اختيار عدة تخصصات دقيقة</small>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>البريد الإلكتروني</label>
+                  <input 
+                    type="email" 
+                    v-model="teacherForm.email" 
+                    class="form-control"
+                    placeholder="البريد الإلكتروني"
+                  >
+                </div>
+                <div class="form-group">
+                  <label>رقم الهاتف *</label>
+                  <input 
+                    type="tel" 
+                    v-model="teacherForm.phone" 
+                    class="form-control"
+                    required
+                    placeholder="رقم الهاتف"
+                  >
+                </div>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>التخصص *</label>
-                <select v-model="teacherForm.department_id" class="form-control" required>
-                  <option value="">اختر التخصص</option>
-                  <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                    {{ dept.name }}
-                  </option>
-                </select>
+            <!-- Step 2: Salary and Hours -->
+            <div v-show="currentStep === 2" class="form-step">
+              <h3 class="step-heading">معلومات الراتب والساعات</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>الراتب الأساسي *</label>
+                  <input 
+                    type="number" 
+                    v-model="teacherForm.basic_salary" 
+                    class="form-control" 
+                    min="0" 
+                    step="0.01"
+                    required
+                    placeholder="الراتب الأساسي بالدينار الليبي"
+                  >
+                </div>
+                <div class="form-group">
+                  <label>معدل الساعة الإضافية</label>
+                  <input 
+                    type="number" 
+                    v-model="teacherForm.hourly_rate" 
+                    class="form-control" 
+                    min="0" 
+                    step="0.01"
+                    placeholder="معدل الساعة الإضافية"
+                  >
+                </div>
               </div>
-              <div class="form-group">
-                <label>الرتبة العلمية</label>
-                <select v-model="teacherForm.qualification" class="form-control">
-                  <option value="">اختر الرتبة</option>
-                  <option value="أستاذ">أستاذ</option>
-                  <option value="أستاذ مشارك">أستاذ مشارك</option>
-                  <option value="أستاذ مساعد">أستاذ مساعد</option>
-                  <option value="محاضر">محاضر</option>
-                </select>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>ساعات التدريس الأسبوعية المطلوبة *</label>
+                  <input 
+                    type="number" 
+                    v-model="teacherForm.teaching_hours" 
+                    class="form-control" 
+                    min="1" 
+                    max="40"
+                    required
+                    placeholder="عدد الساعات الأسبوعية"
+                  >
+                  <small class="form-text">الحد الأقصى 40 ساعة أسبوعياً</small>
+                </div>
+                <div class="form-group">
+                  <label>نوع العقد</label>
+                  <select v-model="teacherForm.contract_type" class="form-control">
+                    <option value="">اختر نوع العقد</option>
+                    <option value="دوام كامل">دوام كامل</option>
+                    <option value="دوام جزئي">دوام جزئي</option>
+                    <option value="بالساعة">بالساعة</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>البريد الإلكتروني</label>
-                <input 
-                  type="email" 
-                  v-model="teacherForm.email" 
-                  class="form-control"
-                >
+            <!-- Step 3: Weekly Availability -->
+            <div v-show="currentStep === 3" class="form-step">
+              <h3 class="step-heading">الجدول الأسبوعي والتوفر</h3>
+              
+              <div class="availability-calendar">
+                <div class="calendar-header">
+                  <div class="time-slot">الوقت</div>
+                  <div class="day-header" v-for="day in workDays" :key="day.key">
+                    {{ day.name }}
+                  </div>
+                </div>
+                
+                <div class="calendar-body">
+                  <div class="time-row" v-for="slot in timeSlots" :key="slot.key">
+                    <div class="time-label">{{ slot.label }}</div>
+                    <div class="day-cell" v-for="day in workDays" :key="day.key">
+                      <input 
+                        type="checkbox" 
+                        :id="`${day.key}-${slot.key}`"
+                        v-model="teacherForm.availability[day.key][slot.key]"
+                        class="availability-checkbox"
+                      >
+                      <label :for="`${day.key}-${slot.key}`" class="availability-label">
+                        <span class="checkmark"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="form-group">
-                <label>رقم الهاتف</label>
-                <input 
-                  type="tel" 
-                  v-model="teacherForm.phone" 
-                  class="form-control"
-                >
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>التخصص الدقيق</label>
-                <input 
-                  type="text" 
-                  v-model="teacherForm.specialization" 
-                  class="form-control"
-                >
-              </div>
-              <div class="form-group">
-                <label>سنوات الخبرة</label>
-                <input 
-                  type="number" 
-                  v-model="teacherForm.years_experience" 
-                  class="form-control" 
-                  min="0" 
-                  max="50"
-                >
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>ساعات التدريس الأسبوعية</label>
-                <input 
-                  type="number" 
-                  v-model="teacherForm.teaching_hours" 
-                  class="form-control" 
-                  min="0" 
-                  max="40"
-                >
-              </div>
-              <div class="form-group">
-                <label>معدل الساعة</label>
-                <input 
-                  type="number" 
-                  v-model="teacherForm.hourly_rate" 
-                  class="form-control" 
-                  min="0" 
-                  step="0.01"
-                >
+              
+              <div class="availability-summary">
+                <h4>ملخص التوفر</h4>
+                <p>إجمالي الساعات المتاحة: <strong>{{ totalAvailableHours }}</strong> ساعة أسبوعياً</p>
+                <p class="form-text">يرجى تحديد الأوقات المتاحة للتدريس (كل خانة تمثل ساعتين)</p>
               </div>
             </div>
 
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" @click="closeModal">
-                إلغاء
-              </button>
-              <button type="submit" class="btn btn-primary" :disabled="submitting">
-                {{ submitting ? 'جاري الحفظ...' : (editingTeacher ? 'تحديث' : 'إضافة') }}
-              </button>
+              <div class="nav-left">
+                <button type="button" class="btn btn-secondary" @click="closeModal">
+                  إلغاء
+                </button>
+                <button 
+                  v-if="currentStep > 1" 
+                  type="button" 
+                  class="btn btn-outline-primary" 
+                  @click="previousStep"
+                >
+                  السابق
+                </button>
+              </div>
+              <div class="nav-right">
+                <button 
+                  v-if="currentStep < 3" 
+                  type="button" 
+                  class="btn btn-primary" 
+                  @click="nextStep"
+                  :disabled="!canProceedToNextStep"
+                >
+                  التالي
+                </button>
+                <button 
+                  v-if="currentStep === 3" 
+                  type="submit" 
+                  class="btn btn-success" 
+                  :disabled="submitting || !isFormValid"
+                >
+                  {{ submitting ? 'جاري الحفظ...' : (editingTeacher ? 'تحديث' : 'إضافة') }}
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -329,6 +477,7 @@ export default {
     // Reactive data
     const teachers = ref([])
     const departments = ref([])
+    const subjects = ref([])
     const loading = ref(false)
     const submitting = ref(false)
     const showModal = ref(false)
@@ -337,6 +486,7 @@ export default {
     const selectedTeacher = ref(null)
     const currentPage = ref(1)
     const teachersPerPage = ref(10)
+    const currentStep = ref(1)
     
     // Filters
     const searchTerm = ref('')
@@ -351,13 +501,25 @@ export default {
       email: '',
       phone: '',
       qualification: '',
+      education_level: '',
       specialization: '',
       years_experience: null,
-      availability: null,
+      availability: {
+        sunday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+        monday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+        tuesday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+        wednesday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+        thursday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false }
+      },
       specializations: [],
       teaching_hours: null,
-      hourly_rate: null
+      hourly_rate: null,
+      basic_salary: null,
+      contract_type: ''
     })
+
+    // Additional reactive data for specializations
+    const selectedSpecialization = ref('')
 
     // Computed properties
     const filteredTeachers = computed(() => {
@@ -394,6 +556,61 @@ export default {
       if (teachersWithExperience.length === 0) return 0
       const total = teachersWithExperience.reduce((sum, t) => sum + t.years_experience, 0)
       return Math.round(total / teachersWithExperience.length)
+    })
+
+    // Multi-step form computed properties
+    const availableSubjects = computed(() => {
+      if (!teacherForm.value.department_id) return []
+      return subjects.value.filter(s => s.department_id === teacherForm.value.department_id)
+    })
+
+    const workDays = ref([
+      { key: 'sunday', name: 'الأحد' },
+      { key: 'monday', name: 'الاثنين' },
+      { key: 'tuesday', name: 'الثلاثاء' },
+      { key: 'wednesday', name: 'الأربعاء' },
+      { key: 'thursday', name: 'الخميس' }
+    ])
+
+    const timeSlots = ref([
+      { key: 'slot1', label: '08:00 - 10:00' },
+      { key: 'slot2', label: '10:00 - 12:00' },
+      { key: 'slot3', label: '12:00 - 14:00' },
+      { key: 'slot4', label: '14:00 - 16:00' },
+      { key: 'slot5', label: '16:00 - 18:00' }
+    ])
+
+    const totalAvailableHours = computed(() => {
+      let total = 0
+      Object.keys(teacherForm.value.availability).forEach(day => {
+        Object.keys(teacherForm.value.availability[day]).forEach(slot => {
+          if (teacherForm.value.availability[day][slot]) {
+            total += 2 // Each slot is 2 hours
+          }
+        })
+      })
+      return total
+    })
+
+    const canProceedToNextStep = computed(() => {
+      if (currentStep.value === 1) {
+        return teacherForm.value.name && 
+               teacherForm.value.department_id && 
+               teacherForm.value.qualification &&
+               teacherForm.value.education_level &&
+               teacherForm.value.specializations.length > 0 &&
+               teacherForm.value.years_experience &&
+               teacherForm.value.phone
+      }
+      if (currentStep.value === 2) {
+        return teacherForm.value.basic_salary && 
+               teacherForm.value.teaching_hours
+      }
+      return true
+    })
+
+    const isFormValid = computed(() => {
+      return canProceedToNextStep.value && totalAvailableHours.value >= teacherForm.value.teaching_hours
     })
 
     const totalPages = computed(() => Math.ceil(filteredTeachers.value.length / teachersPerPage.value))
@@ -447,6 +664,20 @@ export default {
       }
     }
 
+    const loadSubjects = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('subjects')
+          .select('*')
+          .order('name')
+
+        if (error) throw error
+        subjects.value = data || []
+      } catch (error) {
+        console.error('Error loading subjects:', error)
+      }
+    }
+
     const getDepartmentName = (departmentId) => {
       if (!departmentId) return 'غير محدد'
       const dept = departments.value.find(d => d.id === departmentId)
@@ -455,13 +686,24 @@ export default {
 
     const showAddTeacherModal = () => {
       editingTeacher.value = null
+      currentStep.value = 1
       resetForm()
       showModal.value = true
     }
 
     const editTeacher = (teacher) => {
       editingTeacher.value = teacher
-      teacherForm.value = { ...teacher }
+      currentStep.value = 1
+      teacherForm.value = { 
+        ...teacher,
+        availability: teacher.availability || {
+          sunday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+          monday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+          tuesday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+          wednesday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+          thursday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false }
+        }
+      }
       showModal.value = true
     }
 
@@ -473,6 +715,7 @@ export default {
     const closeModal = () => {
       showModal.value = false
       editingTeacher.value = null
+      currentStep.value = 1
       resetForm()
     }
 
@@ -489,13 +732,35 @@ export default {
         email: '',
         phone: '',
         qualification: '',
+        education_level: '',
         specialization: '',
         years_experience: null,
-        availability: null,
+        availability: {
+          sunday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+          monday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+          tuesday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+          wednesday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false },
+          thursday: { slot1: false, slot2: false, slot3: false, slot4: false, slot5: false }
+        },
         specializations: [],
         teaching_hours: null,
-        hourly_rate: null
+        hourly_rate: null,
+        basic_salary: null,
+        contract_type: ''
       }
+      selectedSpecialization.value = ''
+    }
+
+    // Methods for handling multiple specializations
+    const addSpecialization = () => {
+      if (selectedSpecialization.value && !teacherForm.value.specializations.includes(selectedSpecialization.value)) {
+        teacherForm.value.specializations.push(selectedSpecialization.value)
+        selectedSpecialization.value = ''
+      }
+    }
+
+    const removeSpecialization = (index) => {
+      teacherForm.value.specializations.splice(index, 1)
     }
 
     const submitTeacher = async () => {
@@ -510,12 +775,14 @@ export default {
             email: teacherForm.value.email || null,
             phone: teacherForm.value.phone || null,
             qualification: teacherForm.value.qualification || null,
+            education_level: teacherForm.value.education_level || null,
             specialization: teacherForm.value.specialization || null,
             years_experience: teacherForm.value.years_experience || null,
             availability: teacherForm.value.availability || null,
             specializations: teacherForm.value.specializations || null,
             teaching_hours: teacherForm.value.teaching_hours || null,
-            hourly_rate: teacherForm.value.hourly_rate || null
+            hourly_rate: teacherForm.value.hourly_rate || null,
+            basic_salary: teacherForm.value.basic_salary || null
           }
           
           console.log('Updating teacher data:', updateData)
@@ -537,12 +804,14 @@ export default {
             email: teacherForm.value.email || null,
             phone: teacherForm.value.phone || null,
             qualification: teacherForm.value.qualification || null,
+            education_level: teacherForm.value.education_level || null,
             specialization: teacherForm.value.specialization || null,
             years_experience: teacherForm.value.years_experience || null,
             availability: teacherForm.value.availability || null,
             specializations: teacherForm.value.specializations || null,
             teaching_hours: teacherForm.value.teaching_hours || null,
-            hourly_rate: teacherForm.value.hourly_rate || null
+            hourly_rate: teacherForm.value.hourly_rate || null,
+            basic_salary: teacherForm.value.basic_salary || null
           }
           
           console.log('Sending teacher data:', newTeacherData)
@@ -602,6 +871,19 @@ export default {
       alert('سيتم تنفيذ هذه الميزة قريباً')
     }
 
+    // Multi-step navigation
+    const nextStep = () => {
+      if (currentStep.value < 3 && canProceedToNextStep.value) {
+        currentStep.value++
+      }
+    }
+
+    const previousStep = () => {
+      if (currentStep.value > 1) {
+        currentStep.value--
+      }
+    }
+
     // Watchers
     watch([searchTerm, departmentFilter, qualificationFilter], () => {
       currentPage.value = 1
@@ -609,13 +891,14 @@ export default {
 
     // Lifecycle
     onMounted(async () => {
-      await Promise.all([loadTeachers(), loadDepartments()])
+      await Promise.all([loadTeachers(), loadDepartments(), loadSubjects()])
     })
 
     return {
       // Data
       teachers,
       departments,
+      subjects,
       loading,
       submitting,
       showModal,
@@ -624,6 +907,7 @@ export default {
       selectedTeacher,
       currentPage,
       teachersPerPage,
+      currentStep,
       
       // Filters
       searchTerm,
@@ -643,9 +927,25 @@ export default {
       paginatedTeachers,
       visiblePages,
       
+      // Multi-step form
+      availableSubjects,
+      workDays,
+      timeSlots,
+      totalAvailableHours,
+      canProceedToNextStep,
+      isFormValid,
+      nextStep,
+      previousStep,
+      
+      // Specializations
+      selectedSpecialization,
+      addSpecialization,
+      removeSpecialization,
+      
       // Methods
       loadTeachers,
       loadDepartments,
+      loadSubjects,
       getDepartmentName,
       showAddTeacherModal,
       editTeacher,
@@ -784,9 +1084,11 @@ export default {
   height: 2px;
   background-color: #e9ecef;
   z-index: 1;
+  transition: background-color 0.3s ease;
 }
 
-.step.active:not(:last-child)::after {
+.step.active:not(:last-child)::after,
+.step.completed:not(:last-child)::after {
   background-color: #28a745;
 }
 
@@ -806,7 +1108,8 @@ export default {
   transition: all 0.3s ease;
 }
 
-.step.active .step-number {
+.step.active .step-number,
+.step.completed .step-number {
   background-color: #28a745;
   color: white;
   transform: scale(1.1);
@@ -819,18 +1122,229 @@ export default {
   font-weight: 500;
 }
 
-.step.active .step-title {
+.step.active .step-title,
+.step.completed .step-title {
   color: #28a745;
   font-weight: 600;
 }
 
-/* Form step styles */
-.form-step {
+/* Availability Calendar Styles */
+.availability-calendar {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: 120px repeat(5, 1fr);
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.time-slot,
+.day-header {
+  padding: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  border-right: 1px solid #e9ecef;
+}
+
+.time-slot {
+  background-color: #e9ecef;
+}
+
+.calendar-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-row {
+  display: grid;
+  grid-template-columns: 120px repeat(5, 1fr);
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.time-row:last-child {
+  border-bottom: none;
+}
+
+.time-label {
+  padding: 1rem 0.75rem;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+  font-weight: 500;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.day-cell {
+  padding: 1rem;
+  border-right: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.day-cell:last-child {
+  border-right: none;
+}
+
+.availability-checkbox {
   display: none;
 }
 
-.form-step.active {
+.availability-label {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.availability-label:hover {
+  border-color: #28a745;
+  background-color: #f8fff9;
+}
+
+.availability-checkbox:checked + .availability-label {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.checkmark {
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
+  border-top: none;
+  border-right: none;
+  transform: rotate(-45deg);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.availability-checkbox:checked + .availability-label .checkmark {
+  opacity: 1;
+}
+
+.availability-summary {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.availability-summary h4 {
+  margin: 0 0 1rem 0;
+  color: #28a745;
+  font-size: 1.1rem;
+}
+
+.availability-summary p {
+  margin: 0.5rem 0;
+}
+
+/* Form Navigation Styles */
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.nav-left,
+.nav-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: #007bff;
+  border: 1px solid #007bff;
+}
+
+.btn-outline-primary:hover {
+  background: #007bff;
+  color: white;
+}
+
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Form step styles */
+.form-step {
   display: block;
+}
+
+/* Specializations styles */
+.specializations-container {
+  margin-top: 0.5rem;
+}
+
+.selected-specializations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.specialization-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #28a745;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+
+.remove-spec {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.remove-spec:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.add-specialization {
+  margin-bottom: 0.5rem;
 }
 
 .step-heading {

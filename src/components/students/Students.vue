@@ -166,158 +166,310 @@
 
     <!-- Add/Edit Student Modal -->
     <div class="modal" :class="{ show: showModal }">
-      <div class="modal-content">
+      <div class="modal-content multi-page-modal">
         <div class="modal-header">
           <h2 class="modal-title">{{ editingStudent ? 'تعديل الطالب' : 'إضافة طالب جديد' }}</h2>
           <button class="modal-close" @click="closeModal">&times;</button>
         </div>
+        
+        <!-- Progress Steps -->
+        <div class="form-steps">
+          <div class="step" :class="{ active: currentStep === 1, completed: currentStep > 1 }">
+            <div class="step-number">1</div>
+            <div class="step-label">المعلومات الشخصية</div>
+          </div>
+          <div class="step-connector" :class="{ active: currentStep > 1 }"></div>
+          <div class="step" :class="{ active: currentStep === 2, completed: currentStep > 2 }">
+            <div class="step-number">2</div>
+            <div class="step-label">السجل الأكاديمي</div>
+          </div>
+          <div class="step-connector" :class="{ active: currentStep > 2 }"></div>
+          <div class="step" :class="{ active: currentStep === 3, completed: currentStep > 3 }">
+            <div class="step-number">3</div>
+            <div class="step-label">التسجيل</div>
+          </div>
+        </div>
+        
         <div class="modal-body">
           <form @submit.prevent="submitStudent">
-            <div class="form-row">
-              <div class="form-group">
-                <label>الاسم الكامل *</label>
-                <input 
-                  type="text" 
-                  v-model="studentForm.name" 
-                  class="form-control" 
-                  required
-                >
+            <!-- Step 1: Personal Information -->
+            <div v-if="currentStep === 1" class="form-step">
+              <h3 class="step-title">المعلومات الشخصية</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>الاسم الكامل *</label>
+                  <input 
+                    type="text" 
+                    v-model="studentForm.name" 
+                    class="form-control" 
+                    required
+                    placeholder="أدخل الاسم الكامل"
+                  >
+                </div>
+                <div class="form-group">
+                  <label>الاسم بالإنجليزية</label>
+                  <input 
+                    type="text" 
+                    v-model="studentForm.name_en" 
+                    class="form-control"
+                    placeholder="Enter full name in English"
+                  >
+                </div>
               </div>
-              <div class="form-group">
-                <label>الاسم بالإنجليزية</label>
-                <input 
-                  type="text" 
-                  v-model="studentForm.name_en" 
-                  class="form-control"
-                >
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>الجنس *</label>
+                  <select v-model="studentForm.gender" class="form-control" required>
+                    <option value="">اختر الجنس</option>
+                    <option value="male">ذكر</option>
+                    <option value="female">أنثى</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>الجنسية *</label>
+                  <input 
+                    type="text" 
+                    v-model="studentForm.nationality" 
+                    class="form-control"
+                    required
+                    placeholder="الجنسية"
+                  >
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>تاريخ الميلاد *</label>
+                  <input 
+                    type="date" 
+                    v-model="studentForm.birth_date" 
+                    class="form-control"
+                    required
+                  >
+                </div>
+                <div class="form-group">
+                  <label>رقم الهوية/جواز السفر *</label>
+                  <input 
+                    type="text" 
+                    v-model="studentForm.national_id_passport" 
+                    class="form-control"
+                    required
+                    placeholder="رقم الهوية أو جواز السفر"
+                  >
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>البريد الإلكتروني</label>
+                  <input 
+                    type="email" 
+                    v-model="studentForm.email" 
+                    class="form-control"
+                    placeholder="البريد الإلكتروني"
+                  >
+                </div>
+                <div class="form-group">
+                  <label>رقم الهاتف</label>
+                  <input 
+                    type="tel" 
+                    v-model="studentForm.phone" 
+                    class="form-control"
+                    placeholder="رقم الهاتف"
+                  >
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>العنوان</label>
+                  <textarea 
+                    v-model="studentForm.address" 
+                    class="form-control"
+                    rows="3"
+                    placeholder="العنوان الكامل"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>اسم الكفيل</label>
+                  <input 
+                    type="text" 
+                    v-model="studentForm.sponsor_name" 
+                    class="form-control"
+                    placeholder="اسم الكفيل"
+                  >
+                </div>
+                <div class="form-group">
+                  <label>رقم هاتف الكفيل</label>
+                  <input 
+                    type="tel" 
+                    v-model="studentForm.sponsor_contact" 
+                    class="form-control"
+                    placeholder="رقم هاتف الكفيل"
+                  >
+                </div>
               </div>
             </div>
 
-            <div class="form-row">
+            <!-- Step 2: Academic History -->
+            <div v-if="currentStep === 2" class="form-step">
+              <h3 class="step-title">السجل الأكاديمي</h3>
+              
               <div class="form-group">
-                <label>التخصص *</label>
-                <select v-model="studentForm.department_id" class="form-control" required>
-                  <option value="">اختر التخصص</option>
-                  <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                    {{ dept.name }}
-                  </option>
+                <label>نوع التعليم السابق</label>
+                <select v-model="studentForm.academic_history_type" class="form-control" @change="onAcademicTypeChange">
+                  <option value="">اختر نوع التعليم</option>
+                  <option value="ثانوية">ثانوية</option>
+                  <option value="بكالوريوس">بكالوريوس</option>
+                  <option value="دبلوم">دبلوم</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label>السنة الدراسية *</label>
-                <select v-model="studentForm.year" class="form-control" required>
-                  <option value="">اختر السنة</option>
-                  <option value="1">السنة الأولى</option>
-                  <option value="2">السنة الثانية</option>
-                  <option value="3">السنة الثالثة</option>
-                  <option value="4">السنة الرابعة</option>
-                </select>
-              </div>
-            </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>البريد الإلكتروني</label>
-                <input 
-                  type="email" 
-                  v-model="studentForm.email" 
-                  class="form-control"
-                >
-              </div>
-              <div class="form-group">
-                <label>رقم الهاتف</label>
-                <input 
-                  type="tel" 
-                  v-model="studentForm.phone" 
-                  class="form-control"
-                >
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>الجنس</label>
-                <select v-model="studentForm.gender" class="form-control">
-                  <option value="">اختر الجنس</option>
-                  <option value="male">ذكر</option>
-                  <option value="female">أنثى</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>الجنسية</label>
-                <input 
-                  type="text" 
-                  v-model="studentForm.nationality" 
-                  class="form-control"
-                >
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>تاريخ الميلاد</label>
-                <input 
-                  type="date" 
-                  v-model="studentForm.birth_date" 
-                  class="form-control"
-                >
-              </div>
-              <div class="form-group">
-                <label>تاريخ التسجيل</label>
-                <input 
-                  type="date" 
-                  v-model="studentForm.enrollment_date" 
-                  class="form-control"
-                >
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>العنوان</label>
-              <textarea v-model="studentForm.address" class="form-control" rows="3"></textarea>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>رقم الهوية/جواز السفر</label>
-                <input 
-                  type="text" 
-                  v-model="studentForm.national_id_passport" 
-                  class="form-control"
-                >
-              </div>
-              <div class="form-group">
-                <label>المعدل التراكمي</label>
+              <div v-if="studentForm.academic_history_type" class="form-group">
+                <label>{{ getScoreLabel() }}</label>
                 <input 
                   type="number" 
-                  v-model="studentForm.gpa" 
+                  v-model="studentForm.academic_score" 
                   class="form-control" 
-                  step="0.01" 
-                  min="0" 
-                  max="4"
+                  :step="studentForm.academic_history_type === 'ثانوية' ? '0.1' : '0.01'"
+                  :min="0" 
+                  :max="studentForm.academic_history_type === 'ثانوية' ? 100 : 4"
+                  :placeholder="getScorePlaceholder()"
                 >
+                <small class="form-text">{{ getScoreHint() }}</small>
+              </div>
+
+              <div class="form-group">
+                <label>تفاصيل التعليم السابق</label>
+                <textarea 
+                  v-model="studentForm.academic_history" 
+                  class="form-control" 
+                  rows="4"
+                  placeholder="أدخل تفاصيل التعليم السابق (اسم المؤسسة، التخصص، سنة التخرج، إلخ)"
+                ></textarea>
+                <small class="form-text">يمكن تركه فارغاً وإضافته لاحقاً</small>
+              </div>
+
+              <div class="form-group">
+                <label>رفع كشف الدرجات (اختياري)</label>
+                <input 
+                  type="file" 
+                  @change="onTranscriptUpload"
+                  class="form-control"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                >
+                <small class="form-text">يمكن رفع ملف PDF أو صورة لكشف الدرجات</small>
+                <div v-if="studentForm.transcript_file" class="mt-2">
+                  <small class="text-success">✓ تم رفع الملف: {{ getFileName(studentForm.transcript_file) }}</small>
+                </div>
               </div>
             </div>
 
-            <div class="form-group">
-              <label>الحالة</label>
-              <select v-model="studentForm.status" class="form-control">
-                <option value="active">نشط</option>
-                <option value="inactive">غير نشط</option>
-              </select>
-            </div>
+            <!-- Step 3: Enrollment -->
+            <div v-if="currentStep === 3" class="form-step">
+              <h3 class="step-title">معلومات التسجيل</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>التخصص *</label>
+                  <select v-model="studentForm.department_id" class="form-control" required>
+                    <option value="">اختر التخصص</option>
+                    <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                      {{ dept.name }} ({{ dept.name_en }})
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>السنة الدراسية *</label>
+                  <select v-model="studentForm.year" class="form-control" required>
+                    <option value="">اختر السنة</option>
+                    <option value="1">السنة الأولى</option>
+                    <option value="2">السنة الثانية</option>
+                    <option value="3">السنة الثالثة</option>
+                    <option value="4">السنة الرابعة</option>
+                  </select>
+                </div>
+              </div>
 
-            <div class="form-group">
-              <label>سجل التعليم الأكاديمي</label>
-              <textarea v-model="studentForm.academic_history" class="form-control" rows="5"></textarea>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>تاريخ التسجيل *</label>
+                  <input 
+                    type="date" 
+                    v-model="studentForm.enrollment_date" 
+                    class="form-control"
+                    required
+                  >
+                </div>
+                <div class="form-group">
+                  <label>حالة الطالب</label>
+                  <select v-model="studentForm.status" class="form-control">
+                    <option value="active">نشط</option>
+                    <option value="inactive">غير نشط</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Summary Section -->
+              <div class="enrollment-summary">
+                <h4>ملخص البيانات</h4>
+                <div class="summary-grid">
+                  <div class="summary-item">
+                    <strong>الاسم:</strong> {{ studentForm.name || 'غير محدد' }}
+                  </div>
+                  <div class="summary-item">
+                    <strong>التخصص:</strong> {{ getDepartmentName(studentForm.department_id) }}
+                  </div>
+                  <div class="summary-item">
+                    <strong>السنة:</strong> {{ getYearLabel(studentForm.year) }}
+                  </div>
+                  <div class="summary-item">
+                    <strong>تاريخ التسجيل:</strong> {{ studentForm.enrollment_date || 'غير محدد' }}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" @click="closeModal">
+              <button 
+                type="button" 
+                class="btn btn-secondary" 
+                @click="closeModal"
+              >
                 إلغاء
               </button>
-              <button type="submit" class="btn btn-primary" :disabled="submitting">
-                {{ submitting ? 'جاري الحفظ...' : (editingStudent ? 'تحديث' : 'إضافة') }}
+              
+              <button 
+                v-if="currentStep > 1"
+                type="button" 
+                class="btn btn-outline" 
+                @click="previousStep"
+              >
+                السابق
+              </button>
+              
+              <button 
+                v-if="currentStep < 3"
+                type="button" 
+                class="btn btn-primary" 
+                @click="nextStep"
+                :disabled="!canProceedToNextStep"
+              >
+                التالي
+              </button>
+              
+              <button 
+                v-if="currentStep === 3"
+                type="submit" 
+                class="btn btn-success" 
+                :disabled="submitting || !isFormValid"
+              >
+                {{ submitting ? 'جاري الحفظ...' : (editingStudent ? 'تحديث الطالب' : 'إضافة الطالب') }}
               </button>
             </div>
           </form>
@@ -425,6 +577,20 @@
                 <h4>العنوان</h4>
                 <p>{{ selectedStudent.address }}</p>
               </div>
+              
+              <div class="detail-section" v-if="selectedStudent.sponsor_name || selectedStudent.sponsor_contact">
+                <h4>معلومات الكفيل</h4>
+                <div class="detail-grid">
+                  <div class="detail-item" v-if="selectedStudent.sponsor_name">
+                    <span class="detail-label">اسم الكفيل:</span>
+                    <span>{{ selectedStudent.sponsor_name }}</span>
+                  </div>
+                  <div class="detail-item" v-if="selectedStudent.sponsor_contact">
+                    <span class="detail-label">رقم هاتف الكفيل:</span>
+                    <span>{{ selectedStudent.sponsor_contact }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -453,6 +619,9 @@ export default {
     const currentPage = ref(1)
     const studentsPerPage = ref(10)
     
+    // Multi-step form data
+    const currentStep = ref(1)
+    
     // Filters
     const searchTerm = ref('')
     const departmentFilter = ref('')
@@ -473,9 +642,15 @@ export default {
       enrollment_date: '',
       address: '',
       national_id_passport: '',
+      sponsor_name: '',
+      sponsor_contact: '',
       gpa: null,
-      status: 'active',
-      academic_history: ''
+      academic_history: '',
+      academic_history_type: '',
+      academic_score: null,
+      score_type: '',
+      transcript_file: '',
+      status: 'active'
     })
 
     // Computed properties
@@ -541,6 +716,43 @@ export default {
       return pages
     })
 
+    // Multi-step form validation
+    const canProceedToNextStep = computed(() => {
+      switch (currentStep.value) {
+        case 1:
+          // Personal Information - required fields
+          return !!
+            studentForm.value.name &&
+            studentForm.value.gender &&
+            studentForm.value.nationality &&
+            studentForm.value.birth_date &&
+            studentForm.value.national_id_passport
+        case 2:
+          // Academic History - no required fields
+          return true
+        case 3:
+          // Enrollment - required fields
+          return !!
+            studentForm.value.department_id &&
+            studentForm.value.year &&
+            studentForm.value.enrollment_date
+        default:
+          return false
+      }
+    })
+
+    const isFormValid = computed(() => {
+      return !!
+        studentForm.value.name &&
+        studentForm.value.gender &&
+        studentForm.value.nationality &&
+        studentForm.value.birth_date &&
+        studentForm.value.national_id_passport &&
+        studentForm.value.department_id &&
+        studentForm.value.year &&
+        studentForm.value.enrollment_date
+    })
+
     // Methods
     const loadStudents = async () => {
       loading.value = true
@@ -588,12 +800,14 @@ export default {
     const showAddStudentModal = () => {
       editingStudent.value = null
       resetForm()
+      currentStep.value = 1
       showModal.value = true
     }
 
     const editStudent = (student) => {
       editingStudent.value = student
       studentForm.value = { ...student }
+      currentStep.value = 1
       showModal.value = true
     }
 
@@ -605,6 +819,7 @@ export default {
     const closeModal = () => {
       showModal.value = false
       editingStudent.value = null
+      currentStep.value = 1
       resetForm()
     }
 
@@ -627,9 +842,14 @@ export default {
         enrollment_date: '',
         address: '',
         national_id_passport: '',
+        sponsor_contact: '',
         gpa: null,
-        status: 'active',
-        academic_history: ''
+        academic_history: '',
+        academic_history_type: '',
+        academic_score: null,
+        score_type: '',
+        transcript_file: '',
+        status: 'active'
       }
     }
 
@@ -817,6 +1037,92 @@ export default {
       showProfileModal.value = true
     }
 
+    // Multi-step form navigation
+    const nextStep = () => {
+      if (currentStep.value < 3 && canProceedToNextStep.value) {
+        currentStep.value++
+      }
+    }
+
+    const previousStep = () => {
+      if (currentStep.value > 1) {
+        currentStep.value--
+      }
+    }
+
+    const getYearLabel = (year) => {
+      const yearLabels = {
+        '1': 'السنة الأولى',
+        '2': 'السنة الثانية', 
+        '3': 'السنة الثالثة',
+        '4': 'السنة الرابعة'
+      }
+      return yearLabels[year] || 'غير محدد'
+    }
+
+    // Academic History Helper Functions
+    const onAcademicTypeChange = () => {
+      // Reset score when academic type changes
+      studentForm.value.academic_score = null
+      
+      // Set score type based on academic history type
+      if (studentForm.value.academic_history_type === 'ثانوية') {
+        studentForm.value.score_type = 'percentage'
+      } else if (studentForm.value.academic_history_type === 'بكالوريوس' || studentForm.value.academic_history_type === 'دبلوم') {
+        studentForm.value.score_type = 'gpa'
+      } else {
+        studentForm.value.score_type = ''
+      }
+    }
+
+    const getScoreLabel = () => {
+      if (studentForm.value.academic_history_type === 'ثانوية') {
+        return 'المعدل (نسبة مئوية) *'
+      } else if (studentForm.value.academic_history_type === 'بكالوريوس' || studentForm.value.academic_history_type === 'دبلوم') {
+        return 'المعدل التراكمي (GPA) *'
+      }
+      return 'المعدل'
+    }
+
+    const getScorePlaceholder = () => {
+      if (studentForm.value.academic_history_type === 'ثانوية') {
+        return 'أدخل النسبة المئوية (0-100)'
+      } else if (studentForm.value.academic_history_type === 'بكالوريوس' || studentForm.value.academic_history_type === 'دبلوم') {
+        return 'أدخل المعدل التراكمي (0.00-4.00)'
+      }
+      return ''
+    }
+
+    const getScoreHint = () => {
+      if (studentForm.value.academic_history_type === 'ثانوية') {
+        return 'مطلوب للطلاب من خريجي الثانوية العامة'
+      } else if (studentForm.value.academic_history_type === 'بكالوريوس' || studentForm.value.academic_history_type === 'دبلوم') {
+        return 'مطلوب للطلاب الحاصلين على شهادة جامعية سابقة'
+      }
+      return ''
+    }
+
+    // File Upload Handler
+    const onTranscriptUpload = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        // In a real application, you would upload this to a server
+        // For now, we'll just store the file name
+        studentForm.value.transcript_file = file.name
+        console.log('Transcript file selected:', file.name)
+        
+        // TODO: Implement actual file upload to server/cloud storage
+        // const formData = new FormData()
+        // formData.append('transcript', file)
+        // uploadTranscript(formData)
+      }
+    }
+
+    const getFileName = (filePath) => {
+      if (!filePath) return ''
+      return filePath.split('/').pop() || filePath
+    }
+
     const generateQRForAllStudents = async () => {
       if (!confirm('هل أنت متأكد من إنشاء رموز QR لجميع الطلاب؟ هذا سيستغرق بعض الوقت.')) {
         return
@@ -883,6 +1189,7 @@ export default {
       
       // Form
       studentForm,
+      currentStep,
       
       // Computed
       filteredStudents,
@@ -894,6 +1201,8 @@ export default {
       paginatedStudents,
       visiblePages,
       studentsWithQR,
+      canProceedToNextStep,
+      isFormValid,
       
       // Methods
       loadStudents,
@@ -914,7 +1223,16 @@ export default {
       regenerateQRCode,
       downloadQRCode,
       viewQRCode,
-      generateQRForAllStudents
+      generateQRForAllStudents,
+      nextStep,
+      previousStep,
+      getYearLabel,
+      onAcademicTypeChange,
+      getScoreLabel,
+      getScorePlaceholder,
+      getScoreHint,
+      onTranscriptUpload,
+      getFileName
     }
   }
 }
@@ -1024,12 +1342,14 @@ export default {
   gap: 1rem;
 }
 
-/* Step indicator styles */
-.step-indicator {
+/* Form Steps - Horizontal Layout */
+.form-steps {
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 2rem;
-  padding: 0 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
 }
 
 .step {
@@ -1037,65 +1357,77 @@ export default {
   flex-direction: column;
   align-items: center;
   position: relative;
-  flex: 1;
-  max-width: 150px;
-}
-
-.step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 20px;
-  right: -50%;
-  width: 100%;
-  height: 2px;
-  background-color: #e9ecef;
-  z-index: 1;
-}
-
-.step.active:not(:last-child)::after {
-  background-color: #28a745;
+  min-width: 120px;
 }
 
 .step-number {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background-color: #e9ecef;
   color: #6c757d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
   position: relative;
   z-index: 2;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  border: 3px solid #e9ecef;
 }
 
 .step.active .step-number {
   background-color: #28a745;
   color: white;
-  transform: scale(1.1);
+  transform: scale(1.15);
+  border-color: #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
-.step-title {
-  font-size: 0.875rem;
+.step.completed .step-number {
+  background-color: #20c997;
+  color: white;
+  border-color: #20c997;
+}
+
+.step-label {
+  font-size: 0.9rem;
   color: #6c757d;
   text-align: center;
   font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.step.active .step-title {
+.step.active .step-label {
   color: #28a745;
+  font-weight: 700;
+  transform: translateY(-2px);
+}
+
+.step.completed .step-label {
+  color: #20c997;
   font-weight: 600;
+}
+
+/* Step Connectors */
+.step-connector {
+  flex: 1;
+  height: 3px;
+  background-color: #e9ecef;
+  margin: 0 1rem;
+  position: relative;
+  top: -22px;
+  transition: all 0.4s ease;
+}
+
+.step-connector.active {
+  background-color: #28a745;
 }
 
 /* Form step styles */
 .form-step {
-  display: none;
-}
-
-.form-step.active {
   display: block;
 }
 

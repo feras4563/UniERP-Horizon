@@ -334,34 +334,141 @@ export class DatabaseService {
 
   // Get payment plans
   static async getPaymentPlans(): Promise<any[]> {
-    // TEMPORARILY DISABLED - will be reimplemented
-    return [
-      { id: 'full_year', name: 'دفع سنوي كامل', name_en: 'Full Year Payment' },
-      { id: 'semester', name: 'دفع فصلي', name_en: 'Semester Payment' },
-      { id: 'installment_4', name: '4 أقساط', name_en: '4 Installments' }
-    ];
+    try {
+      const { data, error } = await supabase
+        .from('payment_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching payment plans:', error);
+        // Return default payment plans if table doesn't exist
+        return [
+          { id: 1, code: 'FULL_YEAR', name: 'دفع سنوي كامل', name_en: 'Full Year Payment', installments_count: 1 },
+          { id: 2, code: 'SEMESTER', name: 'دفع فصلي', name_en: 'Semester Payment', installments_count: 2 },
+          { id: 3, code: 'QUARTERLY', name: 'دفع ربع سنوي', name_en: 'Quarterly Payment', installments_count: 4 }
+        ];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getPaymentPlans:', error);
+      // Return default payment plans as fallback
+      return [
+        { id: 1, code: 'FULL_YEAR', name: 'دفع سنوي كامل', name_en: 'Full Year Payment', installments_count: 1 },
+        { id: 2, code: 'SEMESTER', name: 'دفع فصلي', name_en: 'Semester Payment', installments_count: 2 },
+        { id: 3, code: 'QUARTERLY', name: 'دفع ربع سنوي', name_en: 'Quarterly Payment', installments_count: 4 }
+      ];
+    }
+  }
+
+  // Get fee types
+  static async getFeeTypes(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('fee_types')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching fee types:', error);
+        // Return default fee types if table doesn't exist
+        return [
+          { id: 1, code: 'TUITION', name: 'رسوم دراسية', name_en: 'Tuition Fees', description: 'الرسوم الدراسية الأساسية' },
+          { id: 2, code: 'REGISTRATION', name: 'رسوم تسجيل', name_en: 'Registration Fees', description: 'رسوم التسجيل للفصل الدراسي' },
+          { id: 3, code: 'LAB', name: 'رسوم مختبر', name_en: 'Laboratory Fees', description: 'رسوم استخدام المختبرات' },
+          { id: 4, code: 'LIBRARY', name: 'رسوم مكتبة', name_en: 'Library Fees', description: 'رسوم استخدام المكتبة' },
+          { id: 5, code: 'EXAM', name: 'رسوم امتحانات', name_en: 'Examination Fees', description: 'رسوم الامتحانات' }
+        ];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getFeeTypes:', error);
+      // Return default fee types as fallback
+      return [
+        { id: 1, code: 'TUITION', name: 'رسوم دراسية', name_en: 'Tuition Fees', description: 'الرسوم الدراسية الأساسية' },
+        { id: 2, code: 'REGISTRATION', name: 'رسوم تسجيل', name_en: 'Registration Fees', description: 'رسوم التسجيل للفصل الدراسي' },
+        { id: 3, code: 'LAB', name: 'رسوم مختبر', name_en: 'Laboratory Fees', description: 'رسوم استخدام المختبرات' },
+        { id: 4, code: 'LIBRARY', name: 'رسوم مكتبة', name_en: 'Library Fees', description: 'رسوم استخدام المكتبة' },
+        { id: 5, code: 'EXAM', name: 'رسوم امتحانات', name_en: 'Examination Fees', description: 'رسوم الامتحانات' }
+      ];
+    }
   }
 
   // Get fee structure for department
   static async getFeeStructure(departmentId: string = 'ALL'): Promise<any> {
-    // TEMPORARILY DISABLED - will be reimplemented
-    return {
-      full_year_amount: 3000,
-      semester_amount: 1600,
-      installment_amount: 800,
-      currency: 'LYD'
-    };
+    try {
+      let query = supabase
+        .from('fee_structure')
+        .select(`
+          *,
+          fee_types (name, code),
+          payment_plans (name, code, installments_count)
+        `)
+        .eq('is_active', true);
+
+      if (departmentId !== 'ALL') {
+        query = query.eq('department_id', departmentId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching fee structure:', error);
+        return {
+          full_year_amount: 3000,
+          semester_amount: 1600,
+          installment_amount: 800,
+          currency: 'LYD'
+        };
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getFeeStructure:', error);
+      return {
+        full_year_amount: 3000,
+        semester_amount: 1600,
+        installment_amount: 800,
+        currency: 'LYD'
+      };
+    }
   }
 
   // Calculate fee amount for payment plan
   static async calculateFeeAmount(paymentPlanId: string, departmentId: string = 'ALL'): Promise<number> {
-    // TEMPORARILY DISABLED - will be reimplemented with simple calculation
-    const baseAmount = 3000; // Default full year amount
-    switch (paymentPlanId) {
-      case 'full_year': return baseAmount;
-      case 'semester': return Math.floor(baseAmount * 0.55); // 1650
-      case 'installment_4': return Math.floor(baseAmount * 0.27); // 810 per installment
-      default: return baseAmount;
+    try {
+      let query = supabase
+        .from('fee_structure')
+        .select('amount')
+        .eq('payment_plan_id', paymentPlanId)
+        .eq('is_active', true);
+
+      if (departmentId !== 'ALL') {
+        query = query.eq('department_id', departmentId);
+      }
+
+      const { data, error } = await query;
+
+      if (error || !data || data.length === 0) {
+        console.error('Error calculating fee amount:', error);
+        // Fallback to default calculation
+        const baseAmount = 3000;
+        switch (paymentPlanId) {
+          case '1': return baseAmount; // Full year
+          case '2': return Math.floor(baseAmount * 0.55); // Semester
+          case '3': return Math.floor(baseAmount * 0.27); // Quarterly
+          default: return baseAmount;
+        }
+      }
+
+      return data[0]?.amount || 3000;
+    } catch (error) {
+      console.error('Error in calculateFeeAmount:', error);
+      return 3000; // Default amount
     }
   }
 
@@ -1246,8 +1353,13 @@ export class DatabaseService {
     return data;
   }
 
-  // Update department
+  // Update department (with lock protection)
   static async updateDepartment(id: string, updates: DepartmentUpdate): Promise<Department> {
+    const department = await this.getDepartmentById(id);
+    if (department?.is_locked) {
+      throw new Error('Cannot update locked department');
+    }
+
     const { data, error } = await supabase
       .from('departments')
       .update(updates)
@@ -1263,8 +1375,13 @@ export class DatabaseService {
     return data;
   }
 
-  // Delete department
+  // Delete department (with lock protection)
   static async deleteDepartment(id: string): Promise<void> {
+    const department = await this.getDepartmentById(id);
+    if (department?.is_locked) {
+      throw new Error('Cannot delete locked department');
+    }
+
     const { error } = await supabase
       .from('departments')
       .delete()
@@ -1272,6 +1389,91 @@ export class DatabaseService {
 
     if (error) {
       console.error('Error deleting department:', error);
+      throw error;
+    }
+  }
+
+
+  // Check if department is locked
+  static async isDepartmentLocked(id: string): Promise<boolean> {
+    const department = await this.getDepartmentById(id);
+    return department?.is_locked || false;
+  }
+
+  // Get departments by lock status
+  static async getDepartmentsByLockStatus(locked: boolean = false): Promise<Department[]> {
+    const { data, error } = await supabase
+      .from('departments')
+      .select('*')
+      .eq('is_locked', locked)
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching departments by lock status:', error);
+      throw error;
+    }
+
+    return data || [];
+  }
+
+  // Get department statistics
+  static async getDepartmentStatistics(): Promise<{
+    total_departments: number;
+    locked_departments: number;
+    departments_with_students: number;
+    departments_with_teachers: number;
+    department_details: any[];
+  }> {
+    try {
+      // Get all departments
+      const departments = await this.getAllDepartments();
+      const total_departments = departments.length;
+      const locked_departments = departments.filter(d => d.is_locked).length;
+
+      // Get department details with counts
+      const department_details = [];
+      let departments_with_students = 0;
+      let departments_with_teachers = 0;
+
+      for (const dept of departments) {
+        // Count students
+        const students = await this.getStudentsByDepartment(dept.id);
+        const studentCount = students.length;
+        if (studentCount > 0) departments_with_students++;
+
+        // Count teachers
+        const { data: teachers, error } = await supabase
+          .from('teachers')
+          .select('id')
+          .eq('department_id', dept.id);
+        
+        const teacherCount = teachers?.length || 0;
+        if (teacherCount > 0) departments_with_teachers++;
+
+        // Count subjects
+        const subjects = await this.getSubjectsByDepartment(dept.id);
+        const subjectCount = subjects.length;
+
+        department_details.push({
+          id: dept.id,
+          name: dept.name,
+          name_en: dept.name_en,
+          is_locked: dept.is_locked || false,
+          student_count: studentCount,
+          teacher_count: teacherCount,
+          subject_count: subjectCount
+        });
+      }
+
+      return {
+        total_departments,
+        locked_departments,
+        departments_with_students,
+        departments_with_teachers,
+        department_details
+      };
+    } catch (error) {
+      console.error('Error getting department statistics:', error);
       throw error;
     }
   }

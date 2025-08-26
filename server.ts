@@ -684,6 +684,15 @@ app.get('/api/fees/payment-plans', async (req, res) => {
   }
 });
 
+app.get('/api/fees/types', async (req, res) => {
+  try {
+    const feeTypes = await DatabaseService.getFeeTypes();
+    res.json({ feeTypes });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch fee types' });
+  }
+});
+
 app.get('/api/fees/structure/:departmentId?', async (req, res) => {
   try {
     const departmentId = req.params.departmentId || 'ALL';

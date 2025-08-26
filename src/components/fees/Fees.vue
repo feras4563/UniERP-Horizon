@@ -1,118 +1,153 @@
 <template>
-  <div class="fees-page">
-    <!-- Content Header -->
-    <div class="content-header">
-      <h1>إدارة الرسوم</h1>
+  <div class="fees-management">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">
+          <i class="fas fa-money-bill-wave"></i>
+          إدارة الرسوم الدراسية
+        </h1>
+        <p class="page-subtitle">إدارة وتتبع جميع الرسوم الدراسية للطلاب</p>
+      </div>
       <div class="header-actions">
-        <button class="btn btn-primary" @click="showAddFeeModal">
+        <button @click="showAddFeeModal = true" class="btn btn-primary">
           <i class="fas fa-plus"></i>
-          إضافة رسوم
+          إضافة رسوم جديدة
         </button>
-        <button class="btn btn-secondary" @click="exportFees">
-          <i class="fas fa-download"></i>
-          تصدير التقرير
+        <button @click="showBulkFeeModal = true" class="btn btn-secondary">
+          <i class="fas fa-layer-group"></i>
+          إضافة رسوم جماعية
         </button>
       </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="summary-cards">
-      <div class="summary-card" style="border-left: 4px solid #28a745;">
-        <div class="card-icon">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total">
           <i class="fas fa-users"></i>
         </div>
-        <div class="card-content">
-          <div class="card-value">{{ totalStudents }}</div>
-          <div class="card-label">إجمالي الطلاب</div>
+        <div class="stat-content">
+          <h3>{{ totalStudents }}</h3>
+          <p>إجمالي الطلاب</p>
         </div>
       </div>
-
-      <div class="summary-card" style="border-left: 4px solid #28a745;">
-        <div class="card-icon">
+      <div class="stat-card">
+        <div class="stat-icon paid">
           <i class="fas fa-check-circle"></i>
         </div>
-        <div class="card-content">
-          <div class="card-value">{{ paidCount }}</div>
-          <div class="card-label">مدفوع</div>
+        <div class="stat-content">
+          <h3>{{ paidCount }}</h3>
+          <p>الرسوم المدفوعة</p>
         </div>
       </div>
-
-      <div class="summary-card" style="border-left: 4px solid #dc3545;">
-        <div class="card-icon">
-          <i class="fas fa-times-circle"></i>
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="fas fa-clock"></i>
         </div>
-        <div class="card-content">
-          <div class="card-value">{{ unpaidCount }}</div>
-          <div class="card-label">غير مدفوع</div>
+        <div class="stat-content">
+          <h3>{{ pendingCount }}</h3>
+          <p>الرسوم المعلقة</p>
         </div>
       </div>
-
-      <div class="summary-card" style="border-left: 4px solid #ffc107;">
-        <div class="card-icon">
+      <div class="stat-card">
+        <div class="stat-icon overdue">
           <i class="fas fa-exclamation-triangle"></i>
         </div>
-        <div class="card-content">
-          <div class="card-value">{{ partialCount }}</div>
-          <div class="card-label">مدفوع جزئياً</div>
+        <div class="stat-content">
+          <h3>{{ overdueCount }}</h3>
+          <p>الرسوم المتأخرة</p>
         </div>
       </div>
-
-      <div class="summary-card" style="border-left: 4px solid #17a2b8;">
-        <div class="card-icon">
-          <i class="fas fa-money-bill-wave"></i>
+      <div class="stat-card">
+        <div class="stat-icon revenue">
+          <i class="fas fa-chart-line"></i>
         </div>
-        <div class="card-content">
-          <div class="card-value">{{ totalCollected }} ريال</div>
-          <div class="card-label">إجمالي المحصل</div>
+        <div class="stat-content">
+          <h3>{{ formatCurrency(totalRevenue) }}</h3>
+          <p>إجمالي الإيرادات</p>
         </div>
       </div>
-
-      <div class="summary-card" style="border-left: 4px solid #6f42c1;">
-        <div class="card-icon">
+      <div class="stat-card">
+        <div class="stat-icon collection">
           <i class="fas fa-percentage"></i>
         </div>
-        <div class="card-content">
-          <div class="card-value">{{ collectionRate }}%</div>
-          <div class="card-label">معدل التحصيل</div>
+        <div class="stat-content">
+          <h3>{{ collectionRate }}%</h3>
+          <p>معدل التحصيل</p>
         </div>
       </div>
     </div>
 
-    <!-- Search and Filters -->
-    <div class="search-filters">
-      <div class="search-bar">
-        <i class="fas fa-search"></i>
+    <!-- Filters and Search -->
+    <div class="filters-section">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label>البحث</label>
         <input 
-          type="text" 
           v-model="searchQuery" 
-          @input="searchFees"
-          placeholder="البحث في الطلاب أو أنواع الرسوم..."
+            @input="handleSearch"
+            placeholder="ابحث بالاسم أو رقم الطالب..."
+            class="filter-input"
         />
       </div>
-      <div class="filters">
-        <select v-model="selectedMajor" @change="filterFees">
+        <div class="filter-group">
+          <label>التخصص</label>
+          <select v-model="selectedDepartment" @change="handleFilter" class="filter-select">
           <option value="">جميع التخصصات</option>
-          <option value="computer-science">علوم الحاسوب</option>
-          <option value="engineering">الهندسة</option>
-          <option value="business">إدارة الأعمال</option>
+            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+              {{ dept.name }}
+            </option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>نوع الرسوم</label>
+          <select v-model="selectedFeeType" @change="handleFilter" class="filter-select">
+            <option value="">جميع الأنواع</option>
+            <option v-for="type in feeTypes" :key="type.id" :value="type.id">
+              {{ type.name }}
+            </option>
         </select>
-        <select v-model="selectedStatus" @change="filterFees">
+        </div>
+        <div class="filter-group">
+          <label>الحالة</label>
+          <select v-model="selectedStatus" @change="handleFilter" class="filter-select">
           <option value="">جميع الحالات</option>
           <option value="paid">مدفوع</option>
-          <option value="unpaid">غير مدفوع</option>
+            <option value="pending">معلق</option>
+            <option value="overdue">متأخر</option>
           <option value="partial">مدفوع جزئياً</option>
         </select>
-        <select v-model="selectedType" @change="filterFees">
-          <option value="">جميع الأنواع</option>
-          <option value="tuition">رسوم دراسية</option>
-          <option value="lab">رسوم مختبر</option>
-          <option value="library">رسوم مكتبة</option>
+        </div>
+        <div class="filter-group">
+          <label>السنة الدراسية</label>
+          <select v-model="selectedAcademicYear" @change="handleFilter" class="filter-select">
+            <option value="">جميع السنوات</option>
+            <option value="2024-2025">2024-2025</option>
+            <option value="2025-2026">2025-2026</option>
+            <option value="2026-2027">2026-2027</option>
         </select>
+        </div>
       </div>
     </div>
 
-    <!-- Data Table -->
+    <!-- Fees Table -->
     <div class="table-container">
+      <div class="table-header">
+        <h3>قائمة الرسوم الدراسية</h3>
+        <div class="table-actions">
+          <button @click="exportFees" class="btn btn-outline">
+            <i class="fas fa-download"></i>
+            تصدير البيانات
+          </button>
+          <button @click="refreshData" class="btn btn-outline">
+            <i class="fas fa-refresh"></i>
+            تحديث
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-wrapper">
       <table class="data-table">
         <thead>
           <tr>
@@ -128,36 +163,39 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="fee in paginatedFees" :key="fee.id">
-            <td>
+            <tr v-for="fee in paginatedFees" :key="fee.id" class="fee-row">
+              <td class="student-cell">
               <div class="student-info">
-                <img :src="fee.studentImage" :alt="fee.studentName" class="student-avatar">
+                  <img :src="fee.student?.profile_image || '/default-avatar.png'" :alt="fee.student?.name" class="student-avatar">
                 <div>
-                  <div class="student-name">{{ fee.studentName }}</div>
-                  <div class="student-id">{{ fee.studentId }}</div>
+                    <div class="student-name">{{ fee.student?.name }}</div>
+                    <div class="student-id">{{ fee.student?.id }}</div>
                 </div>
               </div>
             </td>
-            <td>{{ fee.major }}</td>
-            <td>{{ fee.feeType }}</td>
-            <td>{{ fee.amount }} ريال</td>
-            <td>{{ fee.paid }} ريال</td>
-            <td>{{ fee.remaining }} ريال</td>
-            <td>{{ formatDate(fee.dueDate) }}</td>
+              <td>{{ getDepartmentName(fee.student?.department_id) }}</td>
+              <td>{{ getFeeTypeName(fee.fee_type_id) }}</td>
+              <td class="amount-cell">{{ formatCurrency(fee.amount) }}</td>
+              <td class="amount-cell">{{ formatCurrency(fee.amount - fee.remaining_amount) }}</td>
+              <td class="amount-cell">{{ formatCurrency(fee.remaining_amount) }}</td>
+              <td>{{ formatDate(fee.due_date) }}</td>
             <td>
               <span class="status-badge" :class="getStatusClass(fee.status)">
                 {{ getStatusText(fee.status) }}
               </span>
             </td>
-            <td>
+              <td class="actions-cell">
               <div class="action-buttons">
-                <button class="btn-action btn-view" @click="viewFee(fee)" title="عرض">
+                  <button @click="viewFee(fee)" class="btn-icon" title="عرض التفاصيل">
                   <i class="fas fa-eye"></i>
                 </button>
-                <button class="btn-action btn-edit" @click="editFee(fee)" title="تعديل">
+                  <button @click="editFee(fee)" class="btn-icon" title="تعديل">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn-action btn-delete" @click="deleteFee(fee.id)" title="حذف">
+                  <button @click="recordPayment(fee)" class="btn-icon" title="تسجيل دفعة">
+                    <i class="fas fa-money-bill"></i>
+                  </button>
+                  <button @click="deleteFee(fee)" class="btn-icon danger" title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -169,149 +207,109 @@
 
     <!-- Pagination -->
     <div class="pagination">
-      <button 
-        @click="changePage(currentPage - 1)" 
-        :disabled="currentPage === 1"
-      >
-        السابق
+        <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="btn-page">
+          <i class="fas fa-chevron-right"></i>
       </button>
-      <button 
-        v-for="page in totalPages" 
-        :key="page"
-        @click="changePage(page)"
-        :class="{ active: currentPage === page }"
-      >
-        {{ page }}
+        <span class="page-info">صفحة {{ currentPage }} من {{ totalPages }}</span>
+        <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages" class="btn-page">
+          <i class="fas fa-chevron-left"></i>
       </button>
-      <button 
-        @click="changePage(currentPage + 1)" 
-        :disabled="currentPage === totalPages"
-      >
-        التالي
-      </button>
+    </div>
     </div>
 
-    <!-- Add/Edit Fee Modal -->
-    <div class="modal" :class="{ show: showModal }">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 class="modal-title">{{ isEditing ? 'تعديل الرسوم' : 'إضافة رسوم جديدة' }}</h3>
-          <button class="modal-close" @click="closeModal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="submitFee">
-            <div class="form-row">
-              <div class="form-group">
-                <label>الطالب</label>
-                <select v-model="feeData.studentId" class="form-control" required>
-                  <option value="">اختر الطالب</option>
-                  <option v-for="student in students" :key="student.id" :value="student.id">
-                    {{ student.name }} - {{ student.id }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>نوع الرسوم</label>
-                <select v-model="feeData.feeType" class="form-control" required>
-                  <option value="">اختر نوع الرسوم</option>
-                  <option value="tuition">رسوم دراسية</option>
-                  <option value="lab">رسوم مختبر</option>
-                  <option value="library">رسوم مكتبة</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>المبلغ الإجمالي</label>
-                <input type="number" v-model="feeData.amount" class="form-control" min="0" step="0.01" required>
-              </div>
-              <div class="form-group">
-                <label>المدفوع</label>
-                <input type="number" v-model="feeData.paid" class="form-control" min="0" step="0.01" required>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>تاريخ الاستحقاق</label>
-                <input type="date" v-model="feeData.dueDate" class="form-control" required>
-              </div>
-              <div class="form-group">
-                <label>الحالة</label>
-                <select v-model="feeData.status" class="form-control" required>
-                  <option value="paid">مدفوع</option>
-                  <option value="unpaid">غير مدفوع</option>
-                  <option value="partial">مدفوع جزئياً</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>ملاحظات</label>
-              <textarea v-model="feeData.notes" class="form-control" rows="3"></textarea>
-            </div>
-            <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" @click="closeModal">إلغاء</button>
-              <button type="submit" class="btn btn-primary">
-                {{ isEditing ? 'تحديث' : 'إضافة' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    <!-- Add Fee Modal -->
+    <FeeModal 
+      v-if="showAddFeeModal"
+      :fee="editingFee"
+      :is-editing="isEditing"
+      @close="closeFeeModal"
+      @saved="onFeeSaved"
+    />
+
+    <!-- Bulk Fee Modal -->
+    <BulkFeeModal 
+      v-if="showBulkFeeModal"
+      @close="showBulkFeeModal = false"
+      @saved="onBulkFeesSaved"
+    />
+
+    <!-- Payment Modal -->
+    <PaymentModal 
+      v-if="showPaymentModal"
+      :fee="selectedFee"
+      @close="showPaymentModal = false"
+      @payment-recorded="onPaymentRecorded"
+    />
   </div>
 </template>
 
-<script>
-import { ref, onMounted, computed } from 'vue'
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { supabase } from '../../../supabase'
+import FeeModal from './FeeModal.vue'
+import BulkFeeModal from './BulkFeeModal.vue'
+import PaymentModal from './PaymentModal.vue'
 
-export default {
-  name: 'Fees',
-  setup() {
+// Reactive state
     const fees = ref([])
     const students = ref([])
-    const searchQuery = ref('')
-    const selectedMajor = ref('')
-    const selectedStatus = ref('')
-    const selectedType = ref('')
-    const showModal = ref(false)
-    const isEditing = ref(false)
-    const currentPage = ref(1)
-    const itemsPerPage = ref(10)
-    const editingId = ref(null)
+const departments = ref([])
+const feeTypes = ref([])
+const paymentPlans = ref([])
 
-    const feeData = ref({
-      studentId: '',
-      feeType: '',
-      amount: '',
-      paid: '',
-      dueDate: '',
-      status: 'unpaid',
-      notes: ''
-    })
+// Search and filters
+    const searchQuery = ref('')
+const selectedDepartment = ref('')
+const selectedFeeType = ref('')
+    const selectedStatus = ref('')
+const selectedAcademicYear = ref('')
+
+// Pagination
+const currentPage = ref(1)
+const itemsPerPage = ref(20)
+
+// Modal states
+const showAddFeeModal = ref(false)
+const showBulkFeeModal = ref(false)
+const showPaymentModal = ref(false)
+    const isEditing = ref(false)
+const editingFee = ref(null)
+const selectedFee = ref(null)
+
+// Loading states
+const isLoading = ref(false)
 
     // Computed properties
     const filteredFees = computed(() => {
       let filtered = fees.value
 
+  // Search filter
       if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
         filtered = filtered.filter(fee => 
-          fee.studentName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          fee.feeType.toLowerCase().includes(searchQuery.value.toLowerCase())
-        )
-      }
+      fee.student?.name?.toLowerCase().includes(query) ||
+      fee.student?.id?.toLowerCase().includes(query)
+    )
+  }
 
-      if (selectedMajor.value) {
-        filtered = filtered.filter(fee => fee.major === selectedMajor.value)
-      }
+  // Department filter
+  if (selectedDepartment.value) {
+    filtered = filtered.filter(fee => fee.student?.department_id === selectedDepartment.value)
+  }
 
+  // Fee type filter
+  if (selectedFeeType.value) {
+    filtered = filtered.filter(fee => fee.fee_type_id === selectedFeeType.value)
+  }
+
+  // Status filter
       if (selectedStatus.value) {
         filtered = filtered.filter(fee => fee.status === selectedStatus.value)
       }
 
-      if (selectedType.value) {
-        filtered = filtered.filter(fee => fee.feeType === selectedType.value)
+  // Academic year filter
+  if (selectedAcademicYear.value) {
+    filtered = filtered.filter(fee => fee.academic_year === selectedAcademicYear.value)
       }
 
       return filtered
@@ -323,243 +321,425 @@ export default {
       return filteredFees.value.slice(start, end)
     })
 
-    const totalPages = computed(() => 
-      Math.ceil(filteredFees.value.length / itemsPerPage.value)
-    )
+const totalPages = computed(() => Math.ceil(filteredFees.value.length / itemsPerPage.value))
 
-    const totalStudents = computed(() => fees.value.length)
-    const paidCount = computed(() => 
-      fees.value.filter(fee => fee.status === 'paid').length
-    )
-    const unpaidCount = computed(() => 
-      fees.value.filter(fee => fee.status === 'unpaid').length
-    )
-    const partialCount = computed(() => 
-      fees.value.filter(fee => fee.status === 'partial').length
-    )
-    const totalCollected = computed(() => 
-      fees.value.reduce((sum, fee) => sum + fee.paid, 0)
-    )
+// Statistics
+const totalStudents = computed(() => students.value.length)
+const paidCount = computed(() => fees.value.filter(f => f.status === 'paid').length)
+const pendingCount = computed(() => fees.value.filter(f => f.status === 'pending').length)
+const overdueCount = computed(() => fees.value.filter(f => f.status === 'overdue').length)
+const totalRevenue = computed(() => fees.value.reduce((sum, f) => sum + (f.amount - f.remaining_amount), 0))
     const collectionRate = computed(() => {
-      if (totalStudents.value === 0) return 0
-      const totalAmount = fees.value.reduce((sum, fee) => sum + fee.amount, 0)
-      return Math.round((totalCollected.value / totalAmount) * 100)
+  const totalAmount = fees.value.reduce((sum, f) => sum + f.amount, 0)
+  const collectedAmount = fees.value.reduce((sum, f) => sum + (f.amount - f.remaining_amount), 0)
+  return totalAmount > 0 ? Math.round((collectedAmount / totalAmount) * 100) : 0
     })
 
     // Methods
-    const loadFees = () => {
-      fees.value = getSampleFees()
-      students.value = getSampleStudents()
+const loadData = async () => {
+  try {
+    isLoading.value = true
+
+    // Load fees using Supabase directly
+    const { data: feesData, error: feesError } = await supabase
+      .from('fees')
+      .select(`
+        *,
+        student:students(name, id, department_id),
+        fee_type:fee_types(name),
+        payment_plan:payment_plans(name)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (feesError) {
+      console.error('Error loading fees:', feesError)
+    } else {
+      fees.value = feesData || []
     }
 
-    const searchFees = () => {
+    // Load students
+    const { data: studentsData, error: studentsError } = await supabase
+      .from('students')
+      .select('*')
+      .order('name')
+
+    if (studentsError) {
+      console.error('Error loading students:', studentsError)
+    } else {
+      students.value = studentsData || []
+    }
+
+    // Load departments
+    const { data: departmentsData, error: departmentsError } = await supabase
+      .from('departments')
+      .select('*')
+      .order('name')
+
+    if (departmentsError) {
+      console.error('Error loading departments:', departmentsError)
+    } else {
+      departments.value = departmentsData || []
+    }
+
+    // Load fee types
+    const { data: feeTypesData, error: feeTypesError } = await supabase
+      .from('fee_types')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+
+    if (feeTypesError) {
+      console.error('Error loading fee types:', feeTypesError)
+    } else {
+      feeTypes.value = feeTypesData || []
+    }
+
+    // Load payment plans
+    const { data: paymentPlansData, error: paymentPlansError } = await supabase
+      .from('payment_plans')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+
+    if (paymentPlansError) {
+      console.error('Error loading payment plans:', paymentPlansError)
+    } else {
+      paymentPlans.value = paymentPlansData || []
+    }
+
+  } catch (error) {
+    console.error('Error loading data:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleSearch = () => {
       currentPage.value = 1
     }
 
-    const filterFees = () => {
+const handleFilter = () => {
       currentPage.value = 1
     }
 
     const changePage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
       currentPage.value = page
-    }
+  }
+}
 
-    const showAddFeeModal = () => {
-      isEditing.value = false
-      editingId.value = null
-      resetForm()
-      showModal.value = true
-    }
+const refreshData = () => {
+  loadData()
+}
 
+const exportFees = () => {
+  // TODO: Implement export functionality
+  console.log('Exporting fees...')
+}
+
+// Fee operations
     const editFee = (fee) => {
+  editingFee.value = fee
       isEditing.value = true
-      editingId.value = fee.id
-      feeData.value = { ...fee }
-      showModal.value = true
+  showAddFeeModal.value = true
     }
 
     const viewFee = (fee) => {
-      alert(`تفاصيل الرسوم: ${fee.studentName} - ${fee.feeType}`)
+  // TODO: Implement view fee details
+  console.log('Viewing fee:', fee)
+}
+
+const recordPayment = (fee) => {
+  selectedFee.value = fee
+  showPaymentModal.value = true
+}
+
+const deleteFee = async (fee) => {
+  if (!confirm('هل أنت متأكد من حذف هذه الرسوم؟')) return
+
+  try {
+    const { error } = await supabase
+      .from('fees')
+      .delete()
+      .eq('id', fee.id)
+
+    if (error) {
+      throw error
     }
 
-    const closeModal = () => {
-      showModal.value = false
-      resetForm()
-    }
+    await loadData()
+  } catch (error) {
+    console.error('Error deleting fee:', error)
+    alert('حدث خطأ أثناء حذف الرسوم')
+  }
+}
 
-    const resetForm = () => {
-      feeData.value = {
-        studentId: '',
-        feeType: '',
-        amount: '',
-        paid: '',
-        dueDate: '',
-        status: 'unpaid',
-        notes: ''
-      }
-    }
+const closeFeeModal = () => {
+  showAddFeeModal.value = false
+  editingFee.value = null
+  isEditing.value = false
+}
 
-    const submitFee = () => {
-      if (isEditing.value) {
-        // Update existing fee
-        const index = fees.value.findIndex(item => item.id === editingId.value)
-        if (index !== -1) {
-          fees.value[index] = { ...feeData.value, id: editingId.value }
-        }
-      } else {
-        // Add new fee
-        const newFee = {
-          ...feeData.value,
-          id: Date.now(),
-          studentName: students.value.find(s => s.id === feeData.value.studentId)?.name || '',
-          studentId: students.value.find(s => s.id === feeData.value.studentId)?.id || '',
-          major: students.value.find(s => s.id === feeData.value.studentId)?.major || '',
-          studentImage: students.value.find(s => s.id === feeData.value.studentId)?.image || '',
-          remaining: feeData.value.amount - feeData.value.paid
-        }
-        fees.value.unshift(newFee)
-      }
-      
-      closeModal()
-    }
+const onFeeSaved = () => {
+  closeFeeModal()
+  loadData()
+}
 
-    const deleteFee = (id) => {
-      if (confirm('هل أنت متأكد من حذف هذه الرسوم؟')) {
-        fees.value = fees.value.filter(item => item.id !== id)
-      }
-    }
+const onBulkFeesSaved = () => {
+  showBulkFeeModal.value = false
+  loadData()
+}
 
-    const exportFees = () => {
-      alert('سيتم تصدير تقرير الرسوم...')
+const onPaymentRecorded = () => {
+  showPaymentModal.value = false
+  loadData()
+}
+
+// Utility methods
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('ar-LY', {
+    style: 'currency',
+    currency: 'LYD'
+  }).format(amount || 0)
     }
 
     const formatDate = (date) => {
-      return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      })
+  if (!date) return 'غير محدد'
+  return new Date(date).toLocaleDateString('ar-LY')
+}
+
+const getDepartmentName = (departmentId) => {
+  const dept = departments.value.find(d => d.id === departmentId)
+  return dept?.name || 'غير محدد'
+}
+
+const getFeeTypeName = (feeTypeId) => {
+  const type = feeTypes.value.find(t => t.id === feeTypeId)
+  return type?.name || 'غير محدد'
     }
 
     const getStatusClass = (status) => {
-      switch (status) {
-        case 'paid': return 'status-active'
-        case 'unpaid': return 'status-inactive'
-        case 'partial': return 'status-pending'
-        default: return ''
-      }
+  const classes = {
+    paid: 'status-paid',
+    pending: 'status-pending',
+    overdue: 'status-overdue',
+    partial: 'status-partial'
+  }
+  return classes[status] || 'status-pending'
     }
 
     const getStatusText = (status) => {
-      switch (status) {
-        case 'paid': return 'مدفوع'
-        case 'unpaid': return 'غير مدفوع'
-        case 'partial': return 'مدفوع جزئياً'
-        default: return status
-      }
-    }
-
-    const getSampleStudents = () => {
-      return [
-        { id: 'ST001', name: 'أحمد محمد', major: 'computer-science', image: 'https://via.placeholder.com/40' },
-        { id: 'ST002', name: 'فاطمة علي', major: 'engineering', image: 'https://via.placeholder.com/40' },
-        { id: 'ST003', name: 'محمد أحمد', major: 'business', image: 'https://via.placeholder.com/40' }
-      ]
-    }
-
-    const getSampleFees = () => {
-      return [
-        {
-          id: 1,
-          studentName: 'أحمد محمد',
-          studentId: 'ST001',
-          major: 'computer-science',
-          feeType: 'رسوم دراسية',
-          amount: 5000,
-          paid: 5000,
-          remaining: 0,
-          dueDate: '2024-02-15',
-          status: 'paid',
-          notes: 'تم الدفع كاملاً',
-          studentImage: 'https://via.placeholder.com/40'
-        },
-        {
-          id: 2,
-          studentName: 'فاطمة علي',
-          studentId: 'ST002',
-          major: 'engineering',
-          feeType: 'رسوم مختبر',
-          amount: 2000,
-          paid: 1000,
-          remaining: 1000,
-          dueDate: '2024-02-20',
-          status: 'partial',
-          notes: 'مدفوع جزئياً',
-          studentImage: 'https://via.placeholder.com/40'
-        },
-        {
-          id: 3,
-          studentName: 'محمد أحمد',
-          studentId: 'ST003',
-          major: 'business',
-          feeType: 'رسوم مكتبة',
-          amount: 500,
-          paid: 0,
-          remaining: 500,
-          dueDate: '2024-02-25',
-          status: 'unpaid',
-          notes: 'غير مدفوع',
-          studentImage: 'https://via.placeholder.com/40'
-        }
-      ]
-    }
-
-    onMounted(() => {
-      loadFees()
-    })
-
-    return {
-      fees,
-      students,
-      searchQuery,
-      selectedMajor,
-      selectedStatus,
-      selectedType,
-      showModal,
-      isEditing,
-      currentPage,
-      feeData,
-      editingId,
-      filteredFees,
-      paginatedFees,
-      totalPages,
-      totalStudents,
-      paidCount,
-      unpaidCount,
-      partialCount,
-      totalCollected,
-      collectionRate,
-      searchFees,
-      filterFees,
-      changePage,
-      showAddFeeModal,
-      editFee,
-      viewFee,
-      closeModal,
-      submitFee,
-      deleteFee,
-      exportFees,
-      formatDate,
-      getStatusClass,
-      getStatusText
-    }
+  const texts = {
+    paid: 'مدفوع',
+    pending: 'معلق',
+    overdue: 'متأخر',
+    partial: 'مدفوع جزئياً'
   }
+  return texts[status] || status
 }
+
+// Lifecycle
+onMounted(() => {
+  loadData()
+})
+
+// Watch for filter changes
+watch([selectedDepartment, selectedFeeType, selectedStatus, selectedAcademicYear], () => {
+  handleFilter()
+})
 </script>
 
 <style scoped>
-.fees-page {
-  padding: 0;
+.fees-management {
+  padding: 2rem;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Header Styles */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-content .page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-subtitle {
+  color: #64748b;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Statistics Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.stat-icon.total { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.stat-icon.paid { background: linear-gradient(135deg, #10b981, #059669); }
+.stat-icon.pending { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.stat-icon.overdue { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.stat-icon.revenue { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.stat-icon.collection { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+.stat-content h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: #1e293b;
+}
+
+.stat-content p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* Filters Section */
+.filters-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.filter-input,
+.filter-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Table Styles */
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-header h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.2rem;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: right;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+}
+
+.data-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.fee-row:hover {
+  background: #f8fafc;
+}
+
+.student-cell {
+  min-width: 200px;
 }
 
 .student-info {
@@ -577,43 +757,203 @@ export default {
 
 .student-name {
   font-weight: 600;
-  color: #2c3e50;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
 }
 
 .student-id {
   font-size: 0.8rem;
-  color: #6c757d;
+  color: #64748b;
 }
 
-.status-badge.status-active {
-  background-color: #d4edda;
-  color: #155724;
+.amount-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  text-align: left;
 }
 
-.status-badge.status-inactive {
-  background-color: #f8d7da;
-  color: #721c24;
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  display: inline-block;
+  min-width: 80px;
 }
 
-.status-badge.status-pending {
-  background-color: #fff3cd;
-  color: #856404;
+.status-paid {
+  background: #dcfce7;
+  color: #166534;
 }
 
-/* Responsive adjustments */
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-partial {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.actions-cell {
+  min-width: 120px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background: #e2e8f0;
+  color: #374151;
+}
+
+.btn-icon.danger:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-page {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-page:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #d1d5db;
+}
+
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* Button Styles */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #64748b;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #475569;
+}
+
+.btn-outline {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-outline:hover {
+  background: #f8fafc;
+  border-color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .fees-management {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
-  .form-row {
+  .stats-grid {
     grid-template-columns: 1fr;
   }
   
-  .summary-cards {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  .table-header {
+    flex-direction: column;
+    gap: 1rem;
   }
   
-  .student-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .data-table {
+    font-size: 0.8rem;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem 0.5rem;
   }
 }
 </style>

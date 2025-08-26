@@ -20,7 +20,13 @@ export interface Database {
           phone: string | null;
           status: string;
           academic_history: string | null;
+          academic_history_type: string | null;
           gpa: number | null;
+          academic_score: number | null;
+          score_type: string | null;
+          transcript_file: string | null;
+          sponsor_name: string | null;
+          sponsor_contact: string | null;
           nationality: string | null;
           gender: string | null;
           birth_date: string | null;
@@ -32,7 +38,7 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
-          id?: string;
+          id: string;
           name: string;
           name_en?: string | null;
           department_id?: string | null;
@@ -41,7 +47,13 @@ export interface Database {
           phone?: string | null;
           status?: string;
           academic_history?: string | null;
+          academic_history_type?: string | null;
           gpa?: number | null;
+          academic_score?: number | null;
+          score_type?: string | null;
+          transcript_file?: string | null;
+          sponsor_name?: string | null;
+          sponsor_contact?: string | null;
           nationality?: string | null;
           gender?: string | null;
           birth_date?: string | null;
@@ -62,7 +74,13 @@ export interface Database {
           phone?: string | null;
           status?: string;
           academic_history?: string | null;
+          academic_history_type?: string | null;
           gpa?: number | null;
+          academic_score?: number | null;
+          score_type?: string | null;
+          transcript_file?: string | null;
+          sponsor_name?: string | null;
+          sponsor_contact?: string | null;
           nationality?: string | null;
           gender?: string | null;
           birth_date?: string | null;
@@ -89,6 +107,7 @@ export interface Database {
           specializations: string[] | null;
           teaching_hours: number | null;
           hourly_rate: number | null;
+          basic_salary: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -106,6 +125,7 @@ export interface Database {
           specializations?: string[] | null;
           teaching_hours?: number | null;
           hourly_rate?: number | null;
+          basic_salary?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -123,6 +143,7 @@ export interface Database {
           specializations?: string[] | null;
           teaching_hours?: number | null;
           hourly_rate?: number | null;
+          basic_salary?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -133,6 +154,7 @@ export interface Database {
           name: string;
           name_en: string | null;
           head: string | null;
+          is_locked: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -141,6 +163,7 @@ export interface Database {
           name: string;
           name_en?: string | null;
           head?: string | null;
+          is_locked?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -149,6 +172,7 @@ export interface Database {
           name?: string;
           name_en?: string | null;
           head?: string | null;
+          is_locked?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
